@@ -1,20 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>{{ appid }}</id>
+  <id>io.github.cosmic-ram-applet</id>
   <metadata_license>CC0-1.0</metadata_license>
-  <project_license>{{ license }}</project_license>
-  <name>{{ project-name | title_case }}</name>
-  <summary>{{ description }}</summary>
-  <icon type="remote" width="64" height="64" scale="1">
-    {{ repository-url }}/raw/main/resources/icons/hicolor/scalable/apps/icon.svg
-  </icon>
-  <url type="vcs-browser">{{ repository-url }}</url>
-  <launchable type="desktop-id">{{ appid }}.desktop</launchable>
+  <project_license>MPL-2.0</project_license>
+  <name>RAM Usage</name>
+  <summary>Show used RAM in GB on the COSMIC panel</summary>
+  <description>
+    <p>Displays a RAM icon followed by used system memory in whole GB on the COSMIC panel. The value refreshes every two seconds.</p>
+  </description>
+  <launchable type="desktop-id">io.github.cosmic-ram-applet.desktop</launchable>
   <provides>
     <id>com.system76.CosmicApplet</id>
-    <binaries>
-      <binary>{{ project-name }}</binary>
-    </binaries>
+    <binary>cosmic-ram-applet</binary>
   </provides>
   <requires>
     <display_length compare="ge">360</display_length>
@@ -25,7 +22,7 @@
     <control>touch</control>
   </supports>
   <categories>
-    <category>COSMIC</category>
+    <category>System</category>
   </categories>
   <keywords>
     <keyword>COSMIC</keyword>

@@ -1,85 +1,32 @@
-name := '{{ project-name }}'
-appid := '{{ appid }}'
-{% raw %}
+name := 'cosmic-ram-applet'
+appid := 'io.github.cosmic-ram-applet'
+prefix := env('HOME') / '.local'
 rootdir := ''
-prefix := '/usr'
-
-appdata := appid + '.metainfo.xml'
-desktop := appid + '.desktop'
-
-# Installation paths
-base-dir := absolute_path(clean(rootdir / prefix))
 cargo-target-dir := env('CARGO_TARGET_DIR', 'target')
-appdata-dst := base-dir / 'share' / 'appdata' / appdata
-bin-dst := base-dir / 'bin' / name
-desktop-dst := base-dir / 'share' / 'applications' / desktop
-icon-dst := base-dir / 'share' / 'icons' / 'hicolor' / 'scalable' / 'apps' / appid + '.svg'
+base-dir := absolute_path(clean(rootdir / prefix))
 
-# Default recipe which runs `just build-release`
+# Build the applet.
 default: build-release
 
-# Runs `cargo clean`
-clean:
-    cargo clean
+build-release:
+    cargo build --release --locked
 
-# Removes vendored dependencies
-clean-vendor:
-    rm -rf .cargo vendor vendor.tar
+check:
+    cargo clippy --all-targets --locked -- -D warnings
+    cargo test --locked
 
-# `cargo clean` and removes vendored dependencies
-clean-dist: clean clean-vendor
+# Run a standalone applet surface for development.
+run:
+    cargo run --locked
 
-# Compiles with debug profile
-build-debug *args:
-    cargo build {{args}}
-
-# Compiles with release profile
-build-release *args: (build-debug '--release' args)
-
-# Compiles release profile with vendored dependencies
-build-vendored *args: vendor-extract (build-release '--frozen --offline' args)
-
-# Runs a clippy check
-check *args:
-    cargo clippy --all-features {{args}} -- -W clippy::pedantic
-
-# Runs a clippy check with JSON message format
-check-json: (check '--message-format=json')
-
-# Run the application for testing purposes
-run *args:
-    env RUST_BACKTRACE=full cargo run --release {{args}}
-
-# Installs files
+# Install for the current user by default; use prefix=/usr for system packaging.
 install:
-    install -Dm0755 {{ cargo-target-dir / 'release' / name }} {{bin-dst}}
-    install -Dm0644 {{ 'target' / 'xdgen' / 'app.desktop' }} {{desktop-dst}}
-    install -Dm0644 {{ 'target' / 'xdgen' / 'app.metainfo.xml' }} {{appdata-dst}}
-    install -Dm0644 resources/icon.svg {{icon-dst}}
+    install -Dm0755 {{cargo-target-dir / 'release' / name}} {{base-dir / 'bin' / name + '.new'}}
+    mv -f {{base-dir / 'bin' / name + '.new'}} {{base-dir / 'bin' / name}}
+    install -Dm0644 resources/app.desktop {{base-dir / 'share/applications' / appid + '.desktop'}}
+    desktop-file-edit --set-key=Exec --set-value='"{{absolute_path(prefix / 'bin' / name)}}"' {{base-dir / 'share/applications' / appid + '.desktop'}}
+    install -Dm0644 resources/app.metainfo.xml {{base-dir / 'share/metainfo' / appid + '.metainfo.xml'}}
+    install -Dm0644 resources/icon.svg {{base-dir / 'share/icons/hicolor/scalable/apps' / appid + '.svg'}}
 
-# Uninstalls installed files
 uninstall:
-    rm {{bin-dst}} {{desktop-dst}} {{icon-dst}}
-
-# Vendor dependencies locally
-vendor:
-    mkdir -p .cargo
-    cargo vendor --sync Cargo.toml | head -n -1 > .cargo/config.toml
-    echo 'directory = "vendor"' >> .cargo/config.toml
-    echo >> .cargo/config.toml
-    rm -rf .cargo vendor
-
-# Extracts vendored dependencies
-vendor-extract:
-    rm -rf vendor
-    tar pxf vendor.tar
-
-# Bump cargo version, create git commit, and create tag
-tag version:
-    find -type f -name Cargo.toml -exec sed -i '0,/^version/s/^version.*/version = "{{version}}"/' '{}' \; -exec git add '{}' \;
-    cargo check
-    cargo clean
-    git add Cargo.lock
-    git commit -m 'release: {{version}}'
-    git tag -a {{version}} -m ''
-{% endraw %}
+    rm -f {{base-dir / 'bin' / name}} {{base-dir / 'share/applications' / appid + '.desktop'}} {{base-dir / 'share/metainfo' / appid + '.metainfo.xml'}} {{base-dir / 'share/icons/hicolor/scalable/apps' / appid + '.svg'}}

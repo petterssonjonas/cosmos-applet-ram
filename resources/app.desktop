@@ -1,14 +1,12 @@
 [Desktop Entry]
-Name={{ project-name | title_case }}
-Comment={{ description }}
+Name=RAM Usage
+Comment=Show used RAM in GB
 Type=Application
-Icon={{ appid }}
-Exec={{ project-name }} %F
+Icon=io.github.cosmic-ram-applet
+Exec=cosmic-ram-applet
 Terminal=false
-StartupNotify=true
-Categories=COSMIC
-Keywords=COSMIC
+StartupNotify=false
+Categories=System;Monitor;
+Keywords=RAM;Memory;COSMIC;
 NoDisplay=true
 X-CosmicApplet=true
-X-CosmicHoverPopup=Auto
-MimeType=
