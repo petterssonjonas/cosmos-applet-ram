@@ -1,9 +1,9 @@
 [package]
-name = "cosmic-ram-applet"
+name = "cosmos-applet-ram"
 version = "0.1.0"
 edition = "2024"
 license = "MPL-2.0"
-description = "A COSMIC panel applet showing used RAM in GB"
+description = "Cosmos RAM applet showing used memory on the COSMIC panel"
 
 [dependencies.libcosmic]
 git = "https://github.com/pop-os/libcosmic.git"

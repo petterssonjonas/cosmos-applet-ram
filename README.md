@@ -1,53 +1,80 @@
-# cosmic-ram-applet
+# Cosmos RAM
 
-A small COSMIC panel applet displaying a symbolic RAM stick icon followed by used memory, for example **45GB**. Hover to see used and actual total RAM in MB.
+Show used memory beside a RAM icon in the COSMIC panel. Hover over the value to see used and total memory.
+Cosmos is independent of System76. COSMIC libraries and protocols keep their upstream names.
 
-Based on [pop-os/cosmic-applet-template](https://github.com/pop-os/cosmic-applet-template), using [libcosmic](https://github.com/pop-os/libcosmic).
+## Requirements
 
-## Memory measurement
+Use Linux with a working COSMIC desktop session and readable `/proc/meminfo`.
+Install native build packages for your distribution:
 
-- Reads `/proc/meminfo` immediately on startup and every two seconds.
-- Used RAM is `MemTotal - MemAvailable`, matching modern `free`. Reclaimable cache is available memory; swap is not included.
-- Uses 1024-based RAM units (GiB/MiB), labelled GB/MB. The panel rounds to the nearest whole GB; the tooltip shows whole MB as `used/total MB`. For example, 63,438 MB of actual RAM is approximately 61.95 GB, so full usage rounds to 62GB.
-- The text turns red when `MemAvailable` is **10% or less** of `MemTotal`, and returns to its normal color above 10%. The threshold uses unrounded readings and scales with the machine's actual memory capacity.
-- Displays `N/A` if memory cannot be read, rather than showing a stale or false zero value. Normal updates resume automatically when readings recover.
-- Uses the panel's font, size, padding, and theme colors. The RAM icon is embedded, so it does not depend on the installed icon theme.
+```sh
+# Fedora
+sudo dnf install gcc gcc-c++ cmake git pkgconf-pkg-config just desktop-file-utils expat-devel fontconfig-devel freetype-devel libxkbcommon-devel wayland-devel
+
+# Debian 13 or newer
+sudo apt update
+sudo apt install build-essential cmake git pkgconf just desktop-file-utils libexpat1-dev libfontconfig-dev libfreetype-dev libxkbcommon-dev libwayland-dev
+
+# Arch Linux
+sudo pacman -Syu --needed base-devel cmake git pkgconf just desktop-file-utils expat fontconfig freetype2 libxkbcommon wayland
+```
+
+The lists follow [libcosmic's native requirements](https://github.com/pop-os/libcosmic#dependencies) and distribution package metadata.
+They are package examples, not a claim that all three distributions were tested.
+Install current stable Rust with [rustup](https://rustup.rs), as your normal user. Distribution Rust can be too old.
+After rustup setup, open a new terminal and run:
+
+```sh
+rustup update stable
+rustup default stable
+```
 
 ## Build and install
 
-Requires Linux, a COSMIC desktop session, Rust 1.93 or newer, `just`, `desktop-file-utils`, and the [libcosmic build dependencies](https://github.com/pop-os/libcosmic#building).
+Use `sudo` only for package prerequisites above, never for these build or install commands:
 
 ```sh
-cd cosmic-ram-applet
+git clone https://github.com/petterssonjonas/cosmos-applet-ram
+cd cosmos-applet-ram
 just build-release
 just install
 ```
 
-Installation defaults to `~/.local`: the executable goes in `~/.local/bin`, and applet metadata and the icon go in `~/.local/share`. The installed desktop entry uses the executable's absolute path, so the panel does not need `~/.local/bin` in its `PATH`.
+Build and install are separate. Installation uses the existing release build.
+The executable goes to `~/.local/bin/cosmos-applet-ram`. The desktop entry, metainfo, and icon go to `~/.local/share`.
+The desktop entry uses an absolute executable path. Keep `CARGO_TARGET_DIR` the same for both commands if you set it.
+In a development container, use your host-mapped normal user, not root.
 
-Open **COSMIC Settings → Desktop → Panel → Applets**, add **RAM Usage**, and position it where you want. If it is not listed immediately after installation, reopen Settings or log out and back in. A horizontal panel provides room for the icon and value on one line.
+Open **COSMIC Settings → Desktop → Panel → Configure panel applets**.
+Add **Cosmos RAM** (`dev.jp.CosmosAppletRam`). If it is not listed, reopen Settings or log out and back in.
+Use a horizontal panel for the icon and value on one line. Remove and add the applet again after an upgrade.
+Installation does not change the panel layout.
 
-For a system-wide installation after building:
+## Measurement and limits
 
-```sh
-sudo just prefix=/usr install
-```
+- Reads `/proc/meminfo` at startup and every two seconds.
+- Used memory is `MemTotal - MemAvailable`, as in modern `free`. Reclaimable cache is available memory. Swap is excluded.
+- Uses binary GiB/MiB units, labelled **GB/MB**. The panel rounds to whole GB; the tooltip shows whole MB.
+- Text turns red when available memory is 10% or less of actual total memory. The threshold uses unrounded values.
+- Unreadable or invalid data shows **N/A**, not a stale value or false zero. Updates resume when readings recover.
 
-Remove the applet from the panel before uninstalling:
+No accounts, credentials, or saved settings are required.
 
-```sh
-just uninstall
-```
+## Upgrade from cosmic-ram-applet
 
-Use the same `prefix` and privileges used for installation when uninstalling a system-wide installation.
+Stop the old applet and remove its **RAM Usage** panel entry. Install the renamed build, then add **Cosmos RAM**.
+There is no persistent data to migrate. `just migrate` reports this without copying anything. There are no old-name runtime aliases.
+Remove legacy files separately under the old prefix: `bin/cosmic-ram-applet`,
+`share/applications/io.github.cosmic-ram-applet.desktop`, `share/metainfo/io.github.cosmic-ram-applet.metainfo.xml`, and
+`share/icons/hicolor/scalable/apps/io.github.cosmic-ram-applet.svg`.
 
-## Development
+## Uninstall
 
-```sh
-just run       # Launch a standalone applet surface in a COSMIC session
-just check     # Clippy and memory parser tests
-```
+Remove the applet from the panel. Run `just uninstall` from this source directory, without `sudo`.
+Uninstall removes the new application files. It does not remove legacy files or change panel settings.
 
-The tests cover available-versus-free memory, swap exclusion, binary-unit rounding, actual memory capacity, the inclusive 10% warning boundary on small and large machines, and invalid readings. Compare the hover values with `free --mebi`. Values can differ briefly because each samples at a different time.
+## License and upstream
 
-The local Git repository retains the template's history. Its upstream remote is named `template`; no GitHub repository has been published.
+Code: MPL-2.0, as declared in `Cargo.toml`.
+Based on the [COSMIC applet template](https://github.com/pop-os/cosmic-applet-template), using [libcosmic](https://github.com/pop-os/libcosmic).

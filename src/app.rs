@@ -67,7 +67,7 @@ impl cosmic::Application for AppModel {
     type Flags = ();
     type Message = Message;
 
-    const APP_ID: &'static str = "io.github.cosmic-ram-applet";
+    const APP_ID: &'static str = "dev.jp.CosmosAppletRam";
 
     fn core(&self) -> &cosmic::Core {
         &self.core
