@@ -46,10 +46,27 @@ The executable goes to `~/.local/bin/cosmos-applet-ram`. The desktop entry, meta
 The desktop entry uses an absolute executable path. Keep `CARGO_TARGET_DIR` the same for both commands if you set it.
 In a development container, use your host-mapped normal user, not root.
 
+The lockfile pins [libcosmic `95236a9`](https://github.com/pop-os/libcosmic/commit/95236a944bfd51c63a2fc65fe50a592c47168d40), including its applet startup socket fix. The standalone sizing workaround remains necessary with this revision.
+
+Building the binary alone does not register a panel applet. After `just install`, check the installed registration:
+
+```sh
+test -x "$HOME/.local/bin/cosmos-applet-ram"
+desktop-file-validate "$HOME/.local/share/applications/dev.jp.CosmosAppletRam.desktop"
+grep -E '^(Name|Exec|Icon|NoDisplay|X-CosmicApplet)=' "$HOME/.local/share/applications/dev.jp.CosmosAppletRam.desktop"
+test -r "$HOME/.local/share/icons/hicolor/scalable/apps/dev.jp.CosmosAppletRam.svg"
+```
+
+Expect `Name=Cosmos RAM`, an absolute `Exec` pointing to the installed binary, `Icon=dev.jp.CosmosAppletRam`, `NoDisplay=true`, and `X-CosmicApplet=true`.
+These paths assume the default prefix; adjust them if you override `prefix`.
+If the desktop file is missing here, the user-local registration is absent: run `just install` before investigating rendering. A system-wide installation may have its desktop entry elsewhere.
+
 Open **COSMIC Settings → Desktop → Panel → Configure panel applets**.
 Add **Cosmos RAM** (`dev.jp.CosmosAppletRam`). If it is not listed, reopen Settings or log out and back in.
 Use a horizontal panel for the icon and value on one line. Remove and add the applet again after an upgrade.
 Installation does not change the panel layout.
+
+Launching the binary manually opens a small icon-and-value window for rendering checks. It sizes to its contents, not to the compositor's suggested desktop bounds; panel launches continue to honor the panel's allocated size.
 
 ## Measurement and limits
 

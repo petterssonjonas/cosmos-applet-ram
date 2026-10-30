@@ -114,15 +114,20 @@ impl cosmic::Application for AppModel {
         .spacing(6)
         .align_y(Alignment::Center);
 
-        applet
-            .autosize_window(applet.applet_tooltip(
-                widget::container(content).padding(padding),
-                self.tooltip.clone(),
-                false,
-                Message::SurfaceAction,
-                self.core.main_window_id(),
-            ))
-            .into()
+        let autosize = applet.autosize_window(applet.applet_tooltip(
+            widget::container(content).padding(padding),
+            self.tooltip.clone(),
+            false,
+            Message::SurfaceAction,
+            self.core.main_window_id(),
+        ));
+        // Desktop configure_bounds is available space, not a fixed panel allocation.
+        match &applet.panel_type {
+            cosmic::applet::PanelType::Other(name) if name.is_empty() => {
+                autosize.limits(cosmic::iced::Limits::NONE).into()
+            }
+            _ => autosize.into(),
+        }
     }
 
     fn subscription(&self) -> Subscription<Message> {
